@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Online Board</title>
+  <link rel="stylesheet" href="/style.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎨</text></svg>" />
+</head>
+<body>
+  <!-- Canvas stack: board content, then a transparent overlay for cursors/selection -->
+  <div id="stage">
+    <canvas id="board"></canvas>
+    <canvas id="overlay"></canvas>
+    <div id="text-layer"></div>
+  </div>
+
+  <!-- Left toolbar -->
+  <aside id="toolbar" role="toolbar" aria-label="Drawing tools">
+    <button class="tool" data-tool="select" title="Select (V)"><svg viewBox="0 0 24 24"><path d="M4 2l7 18 2.5-7.5L21 10z"/></svg></button>
+    <button class="tool active" data-tool="pen" title="Pen (P)"><svg viewBox="0 0 24 24"><path d="M3 21l4-1 11-11-3-3L4 17z"/><path d="M15 6l3 3"/></svg></button>
+    <button class="tool" data-tool="highlighter" title="Highlighter (H)"><svg viewBox="0 0 24 24"><path d="M5 18h14"/><path d="M7 15l8-9 4 3-7 9z"/></svg></button>
+    <button class="tool" data-tool="eraser" title="Eraser (E)"><svg viewBox="0 0 24 24"><path d="M4 16l8-8 7 7-5 5H8z"/><path d="M3 21h18"/></svg></button>
+    <div class="tool-sep"></div>
+    <button class="tool" data-tool="line" title="Line (L)"><svg viewBox="0 0 24 24"><path d="M4 20L20 4"/></svg></button>
+    <button class="tool" data-tool="arrow" title="Arrow (A)"><svg viewBox="0 0 24 24"><path d="M4 20L20 4"/><path d="M13 4h7v7"/></svg></button>
+    <button class="tool" data-tool="rect" title="Rectangle (R)"><svg viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="12" rx="1"/></svg></button>
+    <button class="tool" data-tool="ellipse" title="Ellipse (O)"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="12" rx="8" ry="6"/></svg></button>
+    <div class="tool-sep"></div>
+    <button class="tool" data-tool="text" title="Text (T)"><svg viewBox="0 0 24 24"><path d="M5 6h14"/><path d="M12 6v13"/></svg></button>
+    <button class="tool" data-tool="note" title="Sticky note (N)"><svg viewBox="0 0 24 24"><path d="M5 4h14v11l-5 5H5z"/><path d="M19 15h-5v5"/></svg></button>
+    <button class="tool" data-tool="image" title="Insert image (I)"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="2"/><circle cx="9" cy="10" r="1.5"/><path d="M5 17l5-5 4 4 2-2 3 3"/></svg></button>
+    <div class="tool-sep"></div>
+    <button class="tool" data-tool="pan" title="Pan (Space / middle-drag)"><svg viewBox="0 0 24 24"><path d="M9 11V5.5a1.5 1.5 0 013 0V11m0-1.5a1.5 1.5 0 013 0V12m0-1a1.5 1.5 0 013 0v5a5 5 0 01-5 5h-2a5 5 0 01-4-2l-3-4a1.6 1.6 0 012.5-2L9 14"/></svg></button>
+  </aside>
+
+  <!-- Style panel -->
+  <section id="style-panel" aria-label="Style options">
+    <div class="swatches" id="swatches"></div>
+    <label class="field">
+      <span>Size</span>
+      <input type="range" id="size" min="1" max="40" value="4" />
+      <output id="size-val">4</output>
+    </label>
+    <label class="field">
+      <span>Opacity</span>
+      <input type="range" id="opacity" min="10" max="100" value="100" />
+      <output id="opacity-val">100</output>
+    </label>
+    <label class="field fill-field">
+      <span>Fill</span>
+      <input type="checkbox" id="fill" />
+      <input type="color" id="fill-color" value="#fde68a" />
+    </label>
+  </section>
+
+  <!-- Top bar -->
+  <header id="topbar">
+    <div class="brand">🎨 <strong>Online Board</strong></div>
+
+    <div class="room-chip" id="room-chip" title="Click to copy invite link">
+      <span class="dot" id="conn-dot"></span>
+      <code id="room-id"></code>
+    </div>
+
+    <div class="spacer"></div>
+
+    <div id="avatars" class="avatars" aria-label="People in this room"></div>
+
+    <div class="actions">
+      <button id="undo" title="Undo (Ctrl+Z)">↶</button>
+      <button id="redo" title="Redo (Ctrl+Shift+Z)">↷</button>
+      <button id="zoom-out" title="Zoom out (Ctrl+-)">−</button>
+      <button id="zoom-level" title="Reset zoom (Ctrl+0)">100%</button>
+      <button id="zoom-in" title="Zoom in (Ctrl++)">+</button>
+      <button id="fit" title="Fit board to screen (Shift+1)">⤢</button>
+      <button id="grid-toggle" title="Toggle grid (G)">▦</button>
+      <button id="theme-toggle" title="Toggle dark mode (D)">◐</button>
+      <button id="present" title="Present (F5)">▶</button>
+      <button id="import-pptx" title="Open a .pptx file">📂</button>
+      <div class="menu-wrap">
+        <button id="export" title="Export">⬇</button>
+        <div id="export-menu" class="dropdown" hidden>
+          <button data-export="pptx">PowerPoint (.pptx)</button>
+          <button data-export="png">Current slide (.png)</button>
+          <button data-export="json">Board data (.json)</button>
+        </div>
+      </div>
+      <button id="chat-toggle" title="Chat (C)">💬<span id="chat-badge" hidden></span></button>
+      <button id="clear" class="danger" title="Clear this slide">🗑</button>
+      <form method="POST" action="/logout" id="logout-form" hidden>
+        <button type="submit" title="Sign out">⎋</button>
+      </form>
+    </div>
+  </header>
+
+  <!-- Chat drawer -->
+  <section id="chat" hidden aria-label="Room chat">
+    <header>
+      <strong>Chat</strong>
+      <button id="chat-close" aria-label="Close chat">✕</button>
+    </header>
+    <div id="chat-log" role="log" aria-live="polite"></div>
+    <form id="chat-form">
+      <input id="chat-input" placeholder="Message the room…" maxlength="500" autocomplete="off" />
+      <button type="submit">Send</button>
+    </form>
+  </section>
+
+  <!-- Slide strip -->
+  <section id="slide-strip" aria-label="Slides">
+    <div id="slide-list" role="tablist"></div>
+    <button id="slide-add" title="New slide (Ctrl+M)">+ Slide</button>
+  </section>
+
+  <!-- Presentation mode -->
+  <div id="present-mode" hidden>
+    <canvas id="present-canvas"></canvas>
+    <div id="present-bar">
+      <button id="present-prev" aria-label="Previous slide">‹</button>
+      <span id="present-count"></span>
+      <button id="present-next" aria-label="Next slide">›</button>
+      <button id="present-exit" aria-label="Exit presentation">✕</button>
+    </div>
+  </div>
+
+  <!-- Blocking overlay for import/export work -->
+  <div id="busy" class="modal" hidden>
+    <div class="modal-card busy-card">
+      <div class="spinner"></div>
+      <strong id="busy-text">Working…</strong>
+    </div>
+  </div>
+
+  <div id="toast" role="status" aria-live="polite"></div>
+
+  <!-- Name prompt on first visit -->
+  <div id="welcome" class="modal">
+    <form class="modal-card" id="welcome-form">
+      <h2>Join the board</h2>
+      <p>Pick a name so others know who's drawing.</p>
+      <input id="name-input" maxlength="24" placeholder="Your name" autocomplete="off" required />
+      <button type="submit">Start drawing</button>
+    </form>
+  </div>
+
+  <input type="file" id="file-input" accept="image/*" hidden />
+  <input type="file" id="pptx-input" accept=".pptx,application/vnd.openxmlformats-officedocument.presentationml.presentation" hidden />
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

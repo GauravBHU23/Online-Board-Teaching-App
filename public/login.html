@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Online Board — Sign in</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎨</text></svg>" />
+  <style>
+    :root {
+      --bg: #f1f5f9; --surface: #fff; --border: #e2e8f0;
+      --text: #0f172a; --dim: #64748b; --accent: #4f46e5; --danger: #dc2626;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0b1120; --surface: #151d2e; --border: #2b3852;
+        --text: #e6edf7; --dim: #8ea0bd; --accent: #818cf8; --danger: #f87171;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh;
+      display: grid; place-items: center;
+      background: var(--bg); color: var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      padding: 20px;
+    }
+    form {
+      width: min(370px, 100%);
+      padding: 32px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(15, 23, 42, .10);
+      display: flex; flex-direction: column; gap: 14px;
+    }
+    h1 { margin: 0; font-size: 21px; }
+    p { margin: 0; color: var(--dim); font-size: 13px; line-height: 1.5; }
+    input {
+      padding: 11px 13px; font: inherit; color: inherit;
+      background: var(--bg);
+      border: 1px solid var(--border); border-radius: 9px;
+      outline: none;
+    }
+    input:focus { border-color: var(--accent); }
+    button {
+      padding: 11px; font: inherit; font-weight: 600;
+      background: var(--accent); color: #fff;
+      border: none; border-radius: 9px; cursor: pointer;
+    }
+    button:hover { filter: brightness(1.08); }
+    .error {
+      padding: 9px 12px;
+      background: color-mix(in srgb, var(--danger) 12%, transparent);
+      border: 1px solid var(--danger);
+      border-radius: 8px;
+      color: var(--danger);
+      font-size: 13px;
+    }
+    .error[hidden] { display: none; }
+  </style>
+</head>
+<body>
+  <form method="POST" action="/login">
+    <h1>🎨 Online Board</h1>
+    <p>This board is password protected. Enter the password you were given to continue.</p>
+
+    <div class="error" id="err" hidden></div>
+
+    <!-- Preserved so a deep link survives the login round-trip. -->
+    <input type="hidden" name="next" id="next" value="/" />
+    <input
+      type="password" name="password"
+      placeholder="Password" autocomplete="current-password"
+      required autofocus />
+    <button type="submit">Sign in</button>
+  </form>
+
+  <script>
+    const params = new URLSearchParams(location.search);
+    const next = params.get('next');
+    // Only accept same-site paths, so ?next= cannot bounce to another domain.
+    if (next && /^\/(?!\/)/.test(next)) document.getElementById('next').value = next;
+
+    const err = params.get('err');
+    if (err) {
+      const box = document.getElementById('err');
+      box.textContent = err === 'rate'
+        ? 'Too many attempts. Please wait a few minutes and try again.'
+        : 'That password is not correct.';
+      box.hidden = false;
+    }
+  </script>
+</body>
+</html>

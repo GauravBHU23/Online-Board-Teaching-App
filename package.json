@@ -1,0 +1,29 @@
+{
+  "name": "online-board",
+  "version": "1.0.0",
+  "description": "Real-time collaborative whiteboard with rooms, live cursors and persistence",
+  "type": "module",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch --env-file-if-exists=.env server/index.js",
+    "secret": "node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\""
+  },
+  "engines": {
+    "node": ">=20.6"
+  },
+  "keywords": [
+    "whiteboard",
+    "canvas",
+    "socket.io",
+    "collaboration"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.19.2",
+    "jszip": "^3.10.1",
+    "nanoid": "^5.0.7",
+    "pptxgenjs": "^4.0.1",
+    "socket.io": "^4.7.5"
+  }
+}

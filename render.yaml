@@ -1,0 +1,37 @@
+# Render Blueprint — https://render.com/docs/blueprint-spec
+#
+# Deploy with: New > Blueprint, point Render at this repo, then set
+# BOARD_PASSWORD in the dashboard when prompted.
+services:
+  - type: web
+    name: online-board
+    runtime: node
+    plan: starter          # 'free' also works, but free instances sleep and
+                           # cannot mount a disk (boards would not persist).
+    buildCommand: npm ci --omit=dev
+    startCommand: npm start
+    healthCheckPath: /api/health
+
+    envVars:
+      - key: NODE_ENV
+        value: production
+
+      # The shared password. sync:false means Render prompts for it at deploy
+      # time and keeps it out of this file (and out of git).
+      - key: BOARD_PASSWORD
+        sync: false
+
+      # Signs session cookies. Generated once by Render; keeping it stable is
+      # what lets logins survive a restart.
+      - key: SESSION_SECRET
+        generateValue: true
+
+      # Must match the disk mountPath below.
+      - key: DATA_DIR
+        value: /var/data
+
+    # Persistent storage: without this, every redeploy wipes all boards.
+    disk:
+      name: board-data
+      mountPath: /var/data
+      sizeGB: 1
