@@ -57,24 +57,32 @@ Jo bhi board use karega usko yahi password milega. Kuch lamba aur random rakhein
 3. `BOARD_PASSWORD` maangega → step 2 wala password daalein
 4. **Apply** dabayein
 
-Render `SESSION_SECRET` khud generate karega aur `/var/data` pe 1 GB disk mount
-karega. 2-3 minute me live URL mil jayega, jaise
-`https://online-board-xxxx.onrender.com`.
+Render `SESSION_SECRET` khud generate kar dega. 2-3 minute me live URL mil
+jayega, jaise `https://online-board-xxxx.onrender.com`.
 
 **4. Check karein**
 
 URL kholein → login page aana chahiye. Password daalein → board khul jayega.
 Wahi link doosre logon ko bhejein; unhe bhi password chahiye hoga.
 
-### Plan ke baare me
+### ⚠️ Free plan — boards save nahi hote
 
-`render.yaml` me `plan: starter` (~$7/month) set hai, `free` nahi — kyunki
-Render ke free instances **disk mount nahi kar sakte**, matlab har redeploy pe
-saare boards mit jayenge, aur 15 minute inactivity ke baad wo sleep bhi ho jate
-hain (agla visitor ~30 second wait karega).
+`render.yaml` abhi **free plan** pe set hai. Ye jaan lena zaroori hai:
 
-Agar free pe try karna hai to `render.yaml` me `plan: free` karein aur poora
-`disk:` block hata dein — board chalega par data temporary rahega.
+- **Boards permanent nahi hain.** Free instances disk mount nahi kar sakte, to
+  har restart, redeploy, ya sleep ke baad saare boards mit jate hain. Agli class
+  me pichli class ka board nahi milega.
+- **15 minute inactivity pe sleep.** Uske baad pehla visitor ~30 second wait
+  karega jab tak instance wapas uthta hai — aur us restart pe boards bhi jate
+  hain.
+
+Isliye important boards ko **PPTX ya PNG export karke save kar lein** (⬇ menu se)
+class khatm hone se pehle.
+
+**Boards permanently rakhne hain?** `render.yaml` me teen chhote badlav karein
+(file ke neeche exact steps comment me likhe hain): `plan: starter` (~$7/month),
+`DATA_DIR` ko `/var/data`, aur `disk:` block uncomment. Push karte hi Render
+redeploy kar dega.
 
 ### Baad me password badalna
 

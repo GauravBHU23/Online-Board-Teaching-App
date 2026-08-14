@@ -21,6 +21,16 @@ let attemptedPort = Number(PORT);
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
 const isProd = process.env.NODE_ENV === 'production';
 
+/**
+ * A data directory under /tmp is wiped whenever the container restarts, which
+ * is what Render's free plan gives you. Surface that to the client so people
+ * are warned to export their work instead of discovering the loss afterwards.
+ */
+const EPHEMERAL_STORAGE = /^\/tmp(\/|$)/.test(process.env.DATA_DIR || '');
+if (EPHEMERAL_STORAGE) {
+  console.warn('[store] DATA_DIR is under /tmp — boards will NOT survive a restart.');
+}
+
 const newRoomId = customAlphabet('abcdefghijkmnopqrstuvwxyz23456789', 8);
 
 const app = express();
@@ -172,6 +182,7 @@ io.on('connection', (socket) => {
       users: publicUsers(room),
       limits: { maxShapes: MAX_SHAPES_PER_ROOM, maxSlides: MAX_SLIDES },
       authEnabled,
+      ephemeral: EPHEMERAL_STORAGE,
     });
     socket.to(roomId).emit('user:joined', { id: user.id, name: user.name, color: user.color });
     io.to(roomId).emit('users', publicUsers(room));

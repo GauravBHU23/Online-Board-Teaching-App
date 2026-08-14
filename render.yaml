@@ -2,12 +2,16 @@
 #
 # Deploy with: New > Blueprint, point Render at this repo, then set
 # BOARD_PASSWORD in the dashboard when prompted.
+#
+# NOTE: this is the FREE configuration. Free instances cannot mount a disk,
+# so boards live only in the container's ephemeral filesystem and are lost on
+# every restart, redeploy, or sleep. To make boards permanent, switch to
+# `plan: starter` and add back the disk block shown at the bottom of this file.
 services:
   - type: web
     name: online-board
     runtime: node
-    plan: starter          # 'free' also works, but free instances sleep and
-                           # cannot mount a disk (boards would not persist).
+    plan: free
     buildCommand: npm ci --omit=dev
     startCommand: npm start
     healthCheckPath: /api/health
@@ -26,12 +30,20 @@ services:
       - key: SESSION_SECRET
         generateValue: true
 
-      # Must match the disk mountPath below.
+      # Writable path inside the container. This is NOT persistent on the free
+      # plan — it is wiped whenever the instance restarts.
       - key: DATA_DIR
-        value: /var/data
+        value: /tmp/board-data
 
-    # Persistent storage: without this, every redeploy wipes all boards.
-    disk:
-      name: board-data
-      mountPath: /var/data
-      sizeGB: 1
+# ---------------------------------------------------------------------------
+# To upgrade to persistent boards later:
+#   1. change `plan: free` to `plan: starter`
+#   2. change DATA_DIR's value to /var/data
+#   3. uncomment the disk block below
+#   4. commit, push — Render redeploys automatically
+#
+#    disk:
+#      name: board-data
+#      mountPath: /var/data
+#      sizeGB: 1
+# ---------------------------------------------------------------------------

@@ -400,6 +400,39 @@ button, input { font: inherit; color: inherit; }
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* ---------- Ephemeral-storage notice ---------- */
+#ephemeral-notice {
+  position: fixed;
+  top: 62px; left: 50%;
+  transform: translateX(-50%);
+  z-index: 25;
+  display: flex; align-items: center; gap: 10px;
+  max-width: min(660px, calc(100vw - 24px));
+  padding: 9px 12px;
+  background: #fef3c7;
+  color: #78350f;
+  border: 1px solid #f59e0b;
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+[data-theme="dark"] #ephemeral-notice {
+  background: #422006;
+  color: #fde68a;
+  border-color: #b45309;
+}
+#ephemeral-notice button {
+  flex: 0 0 auto;
+  background: none; border: none;
+  color: inherit;
+  cursor: pointer;
+  font-size: 14px;
+  opacity: .7;
+  padding: 0 2px;
+}
+#ephemeral-notice button:hover { opacity: 1; }
+
 /* ---------- Toast ---------- */
 #toast {
   position: fixed;

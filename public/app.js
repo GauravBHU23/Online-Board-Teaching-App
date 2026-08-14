@@ -117,6 +117,11 @@ socket.on('connect', () => {
     state.users = res.users || [];
     // Only offer sign-out when there is actually a session to end.
     $('#logout-form').hidden = !res.authEnabled;
+    // Warn once per session when the server can't persist boards.
+    if (res.ephemeral && !sessionStorage.getItem('board:ephemeral-warned')) {
+      sessionStorage.setItem('board:ephemeral-warned', '1');
+      showEphemeralNotice();
+    }
     renderUsers();
     renderSlideStrip();
     (res.chat || []).forEach(addChatMessage);
@@ -1357,6 +1362,25 @@ addEventListener('keyup', (e) => {
 // ---------------------------------------------------------------------------
 // Misc UI
 // ---------------------------------------------------------------------------
+/**
+ * Persistent banner for ephemeral hosting. Deliberately not a toast: losing a
+ * whole lesson's work is worth an explicit dismissal rather than a 2s flash.
+ */
+function showEphemeralNotice() {
+  const bar = document.createElement('div');
+  bar.id = 'ephemeral-notice';
+  bar.innerHTML = `
+    <span>⚠️ <strong>Boards are temporary on this server</strong> — they are lost
+    when it restarts or sleeps. Export anything you want to keep (⬇ menu).</span>
+  `;
+  const close = document.createElement('button');
+  close.textContent = '✕';
+  close.setAttribute('aria-label', 'Dismiss');
+  close.addEventListener('click', () => bar.remove());
+  bar.appendChild(close);
+  document.body.appendChild(bar);
+}
+
 let toastTimer;
 function toast(text) {
   const el = $('#toast');
